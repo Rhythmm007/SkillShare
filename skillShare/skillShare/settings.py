@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'matching',
     'learning_sessions',
     'wallets',
+    'feedback',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
