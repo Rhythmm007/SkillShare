@@ -24,6 +24,8 @@ class LearningSession(models.Model):
 
     teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='teaching_sessions')
 
+    learner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='learning_sessions', null=True, blank=True)
+
     skill = models.ForeignKey('skills.Skill', on_delete=models.CASCADE)
 
     match = models.ForeignKey('matching.Match', on_delete=models.SET_NULL, null=True, blank=True)
