@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'skills',
     'matching',
     'learning_sessions',
+    'wallets',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
