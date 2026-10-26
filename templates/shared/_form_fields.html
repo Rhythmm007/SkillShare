@@ -1,13 +1,17 @@
 {% comment %}
-  Renders every field of a form with a label, help text and errors.
-  Use: {% include "shared/_form_fields.html" with form=my_form %}
+  {% include "shared/_form_fields.html" with form=my_form %}
 {% endcomment %}
 {% if form.non_field_errors %}
   <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
 {% endif %}
 {% for field in form %}
   <div class="mb-3">
-    {% if field.label %}<label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{% endif %}
+    {% if field.label %}
+    <label
+          class="form-label"
+          for="{{ field.id_for_label }}">{{ field.label }}
+    </label>
+    {% endif %}
     {{ field }}
     {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
     {% for error in field.errors %}
