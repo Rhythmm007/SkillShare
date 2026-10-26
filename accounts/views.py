@@ -1,3 +1,4 @@
+from datetime import date
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -7,6 +8,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ProfileForm, RegisterForm, add_bootstrap_classes
 from .models import User, Notification
+from matching.models import Message
+from matching.views import get_all_matches
+from skills.models import Skill
+from learning_sessions.models import Session
+from wallets.models import Transaction
+from feedback.models import Report, Review
+
 
 def home(request):
     if request.user.is_authenticated:
@@ -21,7 +29,9 @@ def register_view(request):
     form = RegisterForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-
+        Transaction.objects.create(
+            user=user, type="bonus", status="bonus", amount=20, description="Welcome bonus"
+        )
         Notification.objects.create(
             user=user,
             text="Welcome to SkillShare! You received 20 credits. Add your skills to get matched.",
@@ -60,9 +70,20 @@ def dashboard(request):
         return redirect("admin_dashboard")
 
     me = request.user
-
+    upcoming = Session.objects.filter(
+        Q(teacher=me) | Q(learner=me), status="accepted", date__gte=date.today()
+    ).order_by("date", "time")[:4]
+    pending = Session.objects.filter(
+        Q(teacher=me) | Q(learner=me), status="requested"
+    ).exclude(requested_by=me)
+    recent_transactions = me.transactions.all()[:5]
+    recommended = get_all_matches(me)[:3]
 
     context = {
+        "upcoming": upcoming,
+        "pending": pending,
+        "recent_transactions": recent_transactions,
+        "recommended": recommended,
         "locked": me.locked_credits(),
         "earned": me.earned_credits(),
     }
@@ -72,7 +93,7 @@ def dashboard(request):
 @login_required
 def notifications(request):
     my_notifications = list(request.user.notifications.all()[:50])
-    # Visiting the page marks everything as read
+
     request.user.notifications.filter(is_read=False).update(is_read=True)
     return render(request, "accounts/notifications.html", {"notifications": my_notifications})
 
@@ -86,7 +107,6 @@ def my_profile(request):
         form_type = request.POST.get("form_type")
 
         if form_type == "profile":
-            # Removing the photo is its own action: it applies immediately.
             if "remove_photo" in request.POST:
                 if me.photo:
                     me.photo.delete(save=False)
@@ -117,7 +137,6 @@ def my_profile(request):
 
 
 def not_admin(request):
-    """Returns True (and shows a message) if the user is not an admin."""
     if not request.user.is_admin():
         messages.error(request, "Only admins can open that page.")
         return True
@@ -133,7 +152,13 @@ def admin_dashboard(request):
     context = {
         "total_users": users.count(),
         "active_users": users.filter(is_active=True).count(),
-
+        "total_skills": Skill.objects.count(),
+        "total_sessions": Session.objects.count(),
+        "completed_sessions": Session.objects.filter(status="completed").count(),
+        "open_reports": Report.objects.filter(status="open").count(),
+        "credits_in_escrow": sum(s.cost for s in Session.objects.filter(escrow="locked")),
+        "recent_sessions": Session.objects.order_by("-created_at")[:5],
+        "recent_reports": Report.objects.filter(status="open")[:5],
         "new_users": users.order_by("-date_joined")[:5],
     }
     return render(request, "accounts/admin_dashboard.html", context)
@@ -164,16 +189,16 @@ def admin_user_detail(request, pk):
     person = get_object_or_404(User, pk=pk)
     context = {
         "person": person,
+        "sessions": Session.objects.filter(Q(teacher=person) | Q(learner=person))[:20],
         "transactions": person.transactions.all()[:20],
+        "reviews": Review.objects.filter(reviewed_user=person),
+        "reports": Report.objects.filter(reported_user=person),
     }
     return render(request, "accounts/admin_user_detail.html", context)
 
 
 @login_required
 def admin_toggle_user(request, pk):
-
-    #toggle user accounts status
-
     if not_admin(request):
         return redirect("dashboard")
 
@@ -193,13 +218,13 @@ def admin_toggle_user(request, pk):
 
 
 def counts(request):
-
-    """   for shwoing the numbers  """
-
     if not request.user.is_authenticated:
         return {}
     return {
         "unread_notifications": Notification.objects.filter(user=request.user, is_read=False).count(),
-
+        "unread_messages": Message.objects.filter(receiver=request.user, is_read=False).count(),
+        "pending_requests": Session.objects.filter(
+            Q(teacher=request.user) | Q(learner=request.user), status="requested"
+        ).exclude(requested_by=request.user).count(),
     }
 
