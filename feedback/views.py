@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from accounts.forms import ReportForm, ReviewForm
+from feedback.forms import ReportForm, ReviewForm
 from accounts.models import User, Notification
 from accounts.views import not_admin
 from .models import Report, Review

@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from accounts.forms import SkillForm
+from skills.forms import SkillForm
 from accounts.views import not_admin
 from .models import LEVEL_CHOICES, Skill, UserSkill
 

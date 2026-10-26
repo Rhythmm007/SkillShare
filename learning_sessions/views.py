@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from accounts.forms import IssueForm
+from feedback.forms import IssueForm
 from accounts.models import Notification
 from accounts.views import not_admin
 from feedback.models import Review

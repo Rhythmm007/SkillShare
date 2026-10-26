@@ -3,6 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
+    """Our custom user. A 'user' can teach and learn. An 'admin' manages the site."""
 
     ROLE_CHOICES = [
         ("user", "User"),
@@ -13,9 +14,10 @@ class User(AbstractUser):
     bio = models.TextField(blank=True)
     location = models.CharField(max_length=100, blank=True)
     photo = models.ImageField(upload_to="photos/", blank=True, null=True)
-    credits = models.IntegerField(default=20)
+    credits = models.IntegerField(default=20)  # every new user gets 20 credits
 
     def save(self, *args, **kwargs):
+        # A superuser (created with createsuperuser) is always an admin
         if self.is_superuser:
             self.role = "admin"
         super().save(*args, **kwargs)
@@ -36,16 +38,30 @@ class User(AbstractUser):
         return self.skills.filter(kind="learned")
 
     def average_rating(self):
-        pass
+        from feedback.models import Review
+        # ratings = [review.rating for review in Review.objects.filter(reviewed_user=self)]
+        ratings = []
+
+        for review in Review.objects.filter(reviewed_user=self):
+            ratings.append(review.rating)
+
+        if not ratings:
+            return 0
+        return round(sum(ratings) / len(ratings), 1)
 
     def review_count(self):
-        pass
+        from feedback.models import Review
+        return Review.objects.filter(reviewed_user=self).count()
 
     def locked_credits(self):
-        pass
+        from learning_sessions.models import Session
+        sessions = Session.objects.filter(learner=self, escrow="locked")
+        return sum(session.cost for session in sessions)
 
     def earned_credits(self):
-        pass
+        from wallets.models import Transaction
+        transactions = Transaction.objects.filter(user=self, type="earn")
+        return sum(t.amount for t in transactions)
 
     def __str__(self):
         return self.display_name()
