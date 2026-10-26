@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Leave a review{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card p-4">
+      <h1 class="h4 mb-1">Rate your session with {{ other }}</h1>
+      <p class="text-secondary">{{ session.skill }} · {{ session.date|date:"M j, Y" }}</p>
+      <form method="post">
+        {% csrf_token %}
+        {% include "shared/_form_fields.html" with form=form %}
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-coral">Submit review</button>
+          <a href="{% url 'sessions' %}?tab=past" class="btn btn-light">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

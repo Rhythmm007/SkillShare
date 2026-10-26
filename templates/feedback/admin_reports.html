@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Reports</h1>
+
+<ul class="nav nav-pills gap-2 mb-4">
+  <li class="nav-item"><a class="nav-link {% if status == 'open' %}active{% endif %}" href="?status=open">Open</a></li>
+  <li class="nav-item"><a class="nav-link {% if status == 'resolved' %}active{% endif %}" href="?status=resolved">Resolved</a></li>
+  <li class="nav-item"><a class="nav-link {% if status == 'dismissed' %}active{% endif %}" href="?status=dismissed">Dismissed</a></li>
+  <li class="nav-item"><a class="nav-link {% if not status %}active{% endif %}" href="?status=">All</a></li>
+</ul>
+
+{% for r in reports %}
+  <div class="card p-4 mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <strong>{{ r.get_category_display }}</strong>
+          <span class="badge badge-soft">{{ r.get_status_display }}</span>
+        </div>
+        <div class="small text-secondary">
+          <a href="{% url 'admin_user_detail' r.reporter.pk %}">{{ r.reporter }}</a>
+          {% if r.reported_user %} reported <a href="{% url 'admin_user_detail' r.reported_user.pk %}">{{ r.reported_user }}</a>{% endif %}
+          · {{ r.created_at|date:"M j, Y" }}
+        </div>
+      </div>
+    </div>
+
+    <p class="mt-2 mb-2">{{ r.details|linebreaksbr }}</p>
+
+    {% if r.session %}
+      <div class="small p-2 rounded-3 mb-2" style="background: var(--canvas);">
+        Session: {{ r.session.skill }} · {{ r.session.teacher }} teaches {{ r.session.learner }} · {{ r.session.date|date:"M j" }}
+        {% if r.session.mode == "credits" %} · {{ r.session.cost }} credits <span class="badge badge-escrow">{{ r.session.get_escrow_display }}</span>{% endif %}
+      </div>
+    {% endif %}
+
+    {% if r.resolution %}<div class="small text-secondary"><i class="bi bi-check2"></i> {{ r.resolution }}</div>{% endif %}
+
+    {% if r.status == "open" %}
+      <form method="post" action="{% url 'admin_resolve_report' r.pk %}" class="d-flex gap-2 flex-wrap mt-2">
+        {% csrf_token %}
+        {% if r.session and r.session.escrow == "locked" %}
+          <button name="action" value="refund" class="btn btn-sm btn-dark">Refund learner</button>
+          <button name="action" value="release" class="btn btn-sm btn-coral">Pay teacher</button>
+        {% else %}
+          <button name="action" value="resolve" class="btn btn-sm btn-dark">Mark resolved</button>
+        {% endif %}
+        <button name="action" value="dismiss" class="btn btn-sm btn-light">Dismiss</button>
+        {% if r.reported_user %}<a href="{% url 'admin_user_detail' r.reported_user.pk %}" class="btn btn-sm btn-light">View user</a>{% endif %}
+      </form>
+    {% endif %}
+  </div>
+{% empty %}
+  <div class="card empty-state"><i class="bi bi-flag"></i>No reports here.</div>
+{% endfor %}
+{% endblock %}
