@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Sessions{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Sessions</h1>
+
+<!-- Tabs (simple links) -->
+<ul class="nav nav-pills gap-2 mb-4">
+  <li class="nav-item"><a class="nav-link {% if tab == 'upcoming' %}active{% endif %}" href="?tab=upcoming">Upcoming ({{ upcoming.count }})</a></li>
+  <li class="nav-item"><a class="nav-link {% if tab == 'requests' %}active{% endif %}" href="?tab=requests">Requests ({{ requests.count }})</a></li>
+  <li class="nav-item"><a class="nav-link {% if tab == 'past' %}active{% endif %}" href="?tab=past">Past ({{ past.count }})</a></li>
+</ul>
+
+{% if tab == "requests" %}
+  {% for s in requests %}
+    {% include "learning_sessions/_session_card.html" with s=s %}
+  {% empty %}
+    <div class="card empty-state"><i class="bi bi-inbox"></i>No pending requests.</div>
+  {% endfor %}
+
+{% elif tab == "past" %}
+  {% for s in past %}
+    {% include "learning_sessions/_session_card.html" with s=s %}
+  {% empty %}
+    <div class="card empty-state"><i class="bi bi-clock-history"></i>No past sessions yet.</div>
+  {% endfor %}
+
+{% else %}
+  {% for s in upcoming %}
+    {% include "learning_sessions/_session_card.html" with s=s %}
+  {% empty %}
+    <div class="card empty-state">
+      <i class="bi bi-calendar"></i>No upcoming sessions.
+      <div class="mt-3"><a href="{% url 'discover' %}" class="btn btn-coral btn-sm">Find someone to learn from</a></div>
+    </div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

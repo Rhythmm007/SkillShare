@@ -1,0 +1,75 @@
+
+<div class="card p-3 mb-3">
+  <div class="d-flex gap-3 align-items-start flex-wrap">
+    {% if s.teacher == user %}
+      {% include "shared/_avatar.html" with person=s.learner size=44 %}
+    {% else %}
+      {% include "shared/_avatar.html" with person=s.teacher size=44 %}
+    {% endif %}
+
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <strong>{{ s.skill }}</strong>
+        {% if s.status == "completed" %}
+          <span class="badge bg-success-subtle text-success-emphasis">{{ s.get_status_display }}</span>
+        {% elif s.status == "accepted" %}
+          <span class="badge bg-dark">{{ s.get_status_display }}</span>
+        {% elif s.status == "requested" %}
+          <span class="badge bg-coral">{{ s.get_status_display }}</span>
+        {% elif s.status == "disputed" %}
+          <span class="badge badge-escrow">{{ s.get_status_display }}</span>
+        {% else %}
+          <span class="badge badge-soft">{{ s.get_status_display }}</span>
+        {% endif %}
+      </div>
+      <div class="small text-secondary">
+        {% if s.teacher == user %}You teach <a href="{% url 'user_profile' s.learner.pk %}">{{ s.learner }}</a>{% else %}You learn with <a href="{% url 'user_profile' s.teacher.pk %}">{{ s.teacher }}</a>{% endif %}
+        · {{ s.date|date:"D, M j" }} at {{ s.time|time:"H:i" }} · {{ s.get_duration_display }}
+      </div>
+      <div class="small mt-1">
+        {% if s.mode == "swap" %}
+          <i class="bi bi-arrow-left-right text-indigo"></i> Swap for {{ s.swap_skill }}
+        {% else %}
+          <i class="bi bi-coin text-amber"></i> {{ s.cost }} credits
+          {% if s.escrow == "locked" %}<span class="badge badge-escrow ms-1"><i class="bi bi-lock"></i> In escrow</span>{% endif %}
+          {% if s.escrow == "released" %}<span class="badge badge-soft ms-1">Paid to teacher</span>{% endif %}
+          {% if s.escrow == "refunded" %}<span class="badge badge-soft ms-1">Refunded</span>{% endif %}
+        {% endif %}
+      </div>
+      {% if s.note %}<div class="small text-secondary fst-italic mt-1">"{{ s.note }}"</div>{% endif %}
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex gap-2 flex-wrap mt-3">
+    {% if s.status == "requested" %}
+      {% if s.requested_by == user %}
+        <span class="small text-secondary align-self-center">Waiting for {% if s.teacher == user %}{{ s.learner }}{% else %}{{ s.teacher }}{% endif %} to respond.</span>
+        <form method="post" action="{% url 'session_action' s.pk 'cancel' %}">{% csrf_token %}<button class="btn btn-sm btn-light">Cancel request</button></form>
+      {% else %}
+        <form method="post" action="{% url 'session_action' s.pk 'accept' %}">{% csrf_token %}<button class="btn btn-sm btn-dark">Accept</button></form>
+        <form method="post" action="{% url 'session_action' s.pk 'reject' %}">{% csrf_token %}<button class="btn btn-sm btn-light">Decline</button></form>
+      {% endif %}
+
+    {% elif s.status == "accepted" %}
+      {% if s.learner == user %}
+        <form method="post" action="{% url 'session_action' s.pk 'complete' %}">{% csrf_token %}<button class="btn btn-sm btn-coral"><i class="bi bi-check2"></i> Mark as completed</button></form>
+      {% else %}
+        <span class="small text-secondary align-self-center">Only the learner can mark this session as completed.</span>
+      {% endif %}
+      <form method="post" action="{% url 'session_action' s.pk 'cancel' %}">{% csrf_token %}<button class="btn btn-sm btn-light">Cancel</button></form>
+      <a href="{% url 'session_issue' s.pk 'no_show' %}" class="btn btn-sm btn-light">Report no-show</a>
+      <a href="{% url 'session_issue' s.pk 'dispute' %}" class="btn btn-sm btn-light">Open dispute</a>
+
+    {% elif s.status == "disputed" %}
+      <span class="small text-secondary"><i class="bi bi-hourglass-split text-amber"></i> An admin is reviewing this session. Credits stay in escrow.</span>
+
+    {% elif s.status == "completed" %}
+      {% if s.pk in reviewed_ids %}
+        <span class="small text-secondary"><i class="bi bi-check-circle text-green"></i> You reviewed this session.</span>
+      {% else %}
+        <a href="{% url 'review_session' s.pk %}" class="btn btn-sm btn-dark"><i class="bi bi-star"></i> Leave a review</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
