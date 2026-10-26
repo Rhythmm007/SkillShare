@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ person }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'discover' %}" class="small d-inline-block mb-3"><i class="bi bi-arrow-left"></i> Back to Discover</a>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <!-- Profile header -->
+    <div class="card p-4 mb-4">
+      <div class="d-flex gap-3 align-items-center flex-wrap">
+        {% include "shared/_avatar.html" with person=person size=80 %}
+        <div class="flex-grow-1">
+          <h1 class="h3 mb-1">{{ person.display_name }}</h1>
+          <div class="small text-secondary mt-1">
+            {% if person.location %}<i class="bi bi-geo-alt"></i> {{ person.location }} · {% endif %}
+            <span class="stars"><i class="bi bi-star-fill"></i></span> {{ person.average_rating }} ({{ person.review_count }} reviews)
+            · {{ sessions_taught }} sessions taught
+          </div>
+        </div>
+        {% if match.they_teach %}<span class="match-score">{{ match.score }}%</span>{% endif %}
+      </div>
+      {% if person.bio %}<p class="mt-3 mb-0">{{ person.bio|linebreaksbr }}</p>{% endif %}
+      <div class="d-flex gap-2 mt-3">
+        <a href="{% url 'conversation' person.pk %}" class="btn btn-light btn-sm"><i class="bi bi-chat-dots"></i> Message</a>
+        <a href="{% url 'report_user' person.pk %}" class="btn btn-light btn-sm text-secondary"><i class="bi bi-flag"></i> Report</a>
+      </div>
+    </div>
+
+    {% if match.is_swap %}
+      <div class="alert border-0 alert-swap">
+        <i class="bi bi-arrow-left-right text-indigo me-1"></i>
+        <strong>Direct swap available!</strong> They want to learn
+        {% for s in match.i_teach %}{{ s.skill.name }}{% if not forloop.last %}, {% endif %}{% endfor %} from you.
+      </div>
+    {% endif %}
+
+    <!-- Skills -->
+    <div class="card p-4 mb-4">
+      <h2 class="h6 text-secondary text-uppercase">Teaches</h2>
+      <div class="mb-3">
+        {% for s in person.teach_skills %}
+          <span class="skill-tag">{{ s.skill.name }} · {{ s.get_level_display }} · {{ s.price }} cr/hr</span>
+        {% empty %}<span class="text-secondary small">Nothing yet.</span>{% endfor %}
+      </div>
+      <h2 class="h6 text-secondary text-uppercase">Wants to learn</h2>
+      <div class="mb-3">
+        {% for s in person.learn_skills %}
+          <span class="skill-tag learn">{{ s.skill.name }}</span>
+        {% empty %}<span class="text-secondary small">Nothing yet.</span>{% endfor %}
+      </div>
+      <h2 class="h6 text-secondary text-uppercase">Has learned</h2>
+      <div>
+        {% for s in person.learned_skills %}
+          <span class="skill-tag learned">{{ s.skill.name }}</span>
+        {% empty %}<span class="text-secondary small">Nothing yet.</span>{% endfor %}
+      </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="card">
+      <div class="card-header">Reviews ({{ reviews.count }})</div>
+      <ul class="list-group list-group-flush">
+        {% for r in reviews %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <strong>{{ r.reviewer }}</strong>
+              <span class="stars">{% for i in "12345" %}<i class="bi {% if forloop.counter <= r.rating %}bi-star-fill{% else %}bi-star{% endif %}"></i>{% endfor %}</span>
+            </div>
+            <div class="small text-secondary mb-1">{{ r.session.skill }} · {{ r.created_at|date:"M j, Y" }}</div>
+            {% if r.comment %}<div>{{ r.comment }}</div>{% endif %}
+          </li>
+        {% empty %}
+          <li class="list-group-item text-secondary small">No reviews yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Booking form -->
+  <div class="col-lg-5">
+    <div class="card p-4 position-sticky" style="top: 80px;">
+      <h2 class="h5">{% if direction == "teach" %}Offer to teach{% else %}Book a session{% endif %}</h2>
+      {% if person == user %}
+        <p class="text-secondary mb-0">This is your own profile.</p>
+      {% elif direction == "teach" %}
+        {% if not user.teach_skills %}
+          <p class="text-secondary">Add a skill you can teach before offering a session.</p>
+          <a href="{% url 'skills' %}" class="btn btn-coral btn-sm">Add a teaching skill</a>
+        {% elif not person.learn_skills %}
+          <p class="text-secondary mb-0">{{ person.display_name }} isn't looking to learn anything yet.</p>
+        {% else %}
+          <p class="small text-secondary">
+            You teach, {{ person.display_name }} learns. Credits stay in escrow until the session is completed.
+            They have <strong>{{ person.credits }}</strong> credits.
+          </p>
+          <form method="post">
+            {% csrf_token %}
+            {% include "shared/_form_fields.html" with form=form %}
+            <button type="submit" class="btn btn-dark w-100">Send offer</button>
+          </form>
+        {% endif %}
+      {% elif not person.teach_skills %}
+        <p class="text-secondary mb-0">{{ person.display_name }} isn't teaching anything yet.</p>
+      {% else %}
+        <p class="small text-secondary">
+          Swap: free, you teach them back. Credits: locked in escrow until you confirm the session is done.
+          You have <strong>{{ user.credits }}</strong> credits.
+        </p>
+        <form method="post">
+          {% csrf_token %}
+          {% include "shared/_form_fields.html" with form=form %}
+          <button type="submit" class="btn btn-coral w-100">Send request</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

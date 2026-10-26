@@ -1,0 +1,34 @@
+{% comment %}
+  A card for one match. Use: {% include "matching/_match_card.html" with match=m %}
+{% endcomment %}
+<a href="{% url 'user_profile' match.user.pk %}" class="card h-100 p-3">
+  <div class="d-flex align-items-center gap-3 mb-3">
+    {% include "shared/_avatar.html" with person=match.user size=48 %}
+    <div class="flex-grow-1">
+      <div class="fw-bold">{{ match.user.display_name }}</div>
+      <div class="small text-secondary">{{ match.user.location|default:"SkillShare member" }}</div>
+    </div>
+    <span class="match-score" title="Match score">{{ match.score }}%</span>
+  </div>
+
+  <div class="small text-secondary mb-1">Can teach you</div>
+  <div class="mb-2">
+    {% for s in match.they_teach %}<span class="skill-tag">{{ s.skill.name }} · {{ s.get_level_display }}</span>{% endfor %}
+  </div>
+
+  {% if match.is_swap %}
+    <div class="small text-secondary mb-1">Wants to learn from you</div>
+    <div class="mb-2">
+      {% for s in match.i_teach %}<span class="skill-tag learn">{{ s.skill.name }}</span>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="d-flex justify-content-between align-items-center mt-auto pt-2 small">
+    {% if match.is_swap %}
+      <span class="fw-semibold"><i class="bi bi-arrow-left-right text-indigo"></i> Free swap</span>
+    {% else %}
+      <span class="fw-semibold"><i class="bi bi-coin text-amber"></i> From {{ match.they_teach.0.price }} credits/hr</span>
+    {% endif %}
+    <span class="stars"><i class="bi bi-star-fill"></i> {{ match.user.average_rating }} <span class="text-secondary">({{ match.user.review_count }})</span></span>
+  </div>
+</a>

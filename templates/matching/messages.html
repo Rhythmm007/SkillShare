@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Messages</h1>
+
+<div class="row g-3">
+  <!-- Conversation list -->
+  <div class="col-md-4 {% if other_user %}d-none d-md-block{% endif %}">
+    <div class="card p-2">
+      {% for c in conversations %}
+        <a href="{% url 'conversation' c.user.pk %}" class="conversation-link d-flex align-items-center gap-2 p-2 {% if c.user == other_user %}active{% endif %}">
+          {% include "shared/_avatar.html" with person=c.user size=40 %}
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="fw-semibold">{{ c.user }}</div>
+            <div class="small text-secondary text-truncate">{{ c.last.text }}</div>
+          </div>
+          {% if c.unread %}<span class="badge bg-coral">{{ c.unread }}</span>{% endif %}
+        </a>
+      {% empty %}
+        <div class="empty-state"><i class="bi bi-chat"></i>No conversations yet. Message someone from their profile.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="col-md-8">
+    {% if other_user %}
+      <div class="card p-3">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <a href="{% url 'inbox' %}" class="btn btn-light btn-sm d-md-none"><i class="bi bi-arrow-left"></i></a>
+          {% include "shared/_avatar.html" with person=other_user size=40 %}
+          <div>
+            <div class="fw-bold">{{ other_user }}</div>
+            {% if not other_user.is_admin %}<a href="{% url 'user_profile' other_user.pk %}" class="small">View profile</a>{% endif %}
+          </div>
+        </div>
+
+        <div class="chat-box mb-3" id="chat-box">
+          {% for m in thread %}
+            <div class="bubble {% if m.sender == user %}mine{% else %}theirs{% endif %}">
+              <div>{{ m.text|linebreaksbr }}</div>
+              <div class="small opacity-50">{{ m.created_at|date:"M j, H:i" }}</div>
+            </div>
+          {% empty %}
+            <div class="empty-state">Say hi to {{ other_user.first_name|default:other_user.username }}!</div>
+          {% endfor %}
+        </div>
+
+        <form method="post" class="d-flex gap-2">
+          {% csrf_token %}
+          {{ form.text }}
+          <button type="submit" class="btn btn-coral"><i class="bi bi-send"></i></button>
+        </form>
+        {% for error in form.text.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+      </div>
+      <script>
+        // Scroll to the newest message
+        var box = document.getElementById("chat-box");
+        box.scrollTop = box.scrollHeight;
+      </script>
+    {% else %}
+      <div class="card empty-state h-100 d-none d-md-block"><i class="bi bi-chat-dots"></i>Pick a conversation.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

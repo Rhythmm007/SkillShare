@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Discover{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+  <div>
+    <h1 class="h3 mb-1">Discover</h1>
+    <p class="text-secondary mb-0">Find your best matches, then browse every skill the community is sharing.</p>
+  </div>
+  <a href="{% url 'skills' %}" class="btn btn-light"><i class="bi bi-lightbulb"></i> My skills</a>
+</div>
+
+<!-- Match search (same as before) -->
+<form method="get" class="card p-3 mb-4">
+  <div class="row g-2">
+    <div class="col-md-6">
+      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by skill or name...">
+    </div>
+    <div class="col-md-4">
+      <select name="category" class="form-select" aria-label="Category">
+        <option value="">All categories</option>
+        {% for c in categories %}
+          <option value="{{ c }}" {% if c == selected_category %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-dark" type="submit"><i class="bi bi-search"></i> Search</button>
+    </div>
+  </div>
+  {% if selected_kind %}<input type="hidden" name="kind" value="{{ selected_kind }}">{% endif %}
+</form>
+
+<!-- Best swaps -->
+<div class="d-flex align-items-center gap-2 mb-2">
+  <h2 class="h5 mb-0"><i class="bi bi-arrow-left-right text-indigo"></i> Best swaps</h2>
+  <span class="badge badge-soft">{{ swap_matches|length }}</span>
+</div>
+<p class="small text-secondary">You each teach what the other wants. Swaps are free.</p>
+<div class="row g-3 mb-4">
+  {% for m in swap_matches %}
+    <div class="col-md-6 col-xl-4">{% include "matching/_match_card.html" with match=m %}</div>
+  {% empty %}
+    <div class="col-12"><div class="card empty-state"><i class="bi bi-arrow-left-right"></i>No direct swaps yet. Add more skills you can teach.</div></div>
+  {% endfor %}
+</div>
+
+<!-- All skills -->
+<div class="border-top pt-4">
+  <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+    <div>
+      <h2 class="h5 mb-1"><i class="bi bi-grid-3x3-gap text-coral"></i> All skills from the community</h2>
+      <p class="small text-secondary mb-0">Every skill people are teaching or want to learn. Send a request straight from a card.</p>
+    </div>
+    <span class="small text-secondary">{{ entries|length }} skill{{ entries|length|pluralize }} · {{ teach_count }} taught · {{ learn_count }} wanted</span>
+  </div>
+
+  <form method="get" class="card p-3 mb-4">
+    <div class="row g-2">
+      <div class="col-lg-5">
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search skill, category or person...">
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <select name="kind" class="form-select" aria-label="Teaching or learning">
+          <option value="">Teaching &amp; learning</option>
+          <option value="teach" {% if selected_kind == "teach" %}selected{% endif %}>Skills being taught</option>
+          <option value="learn" {% if selected_kind == "learn" %}selected{% endif %}>Skills people want to learn</option>
+        </select>
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <select name="category" class="form-select" aria-label="Category">
+          <option value="">All categories</option>
+          {% for c in categories %}
+            <option value="{{ c }}" {% if c == selected_category %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-2 d-grid">
+        <button class="btn btn-dark" type="submit"><i class="bi bi-filter"></i> Filter</button>
+      </div>
+    </div>
+    {% if query or selected_category or selected_kind %}
+      <div class="small text-secondary mt-2">
+        {{ entries|length }} result{{ entries|length|pluralize }} ·
+        <a href="{% url 'discover' %}">Clear filters</a>
+      </div>
+    {% endif %}
+  </form>
+
+  <div class="row g-3">
+    {% for entry in entries %}
+      <div class="col-md-6 col-xl-4">
+        <div class="card h-100 p-3">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            {% include "shared/_avatar.html" with person=entry.user size=42 %}
+            <div class="flex-grow-1 overflow-hidden">
+              <a href="{% url 'user_profile' entry.user.pk %}" class="fw-bold text-reset text-decoration-none">{{ entry.user.display_name }}</a>
+              <div class="small text-secondary text-truncate">@{{ entry.user.username }}{% if entry.user.location %} · {{ entry.user.location }}{% endif %}</div>
+            </div>
+            {% if entry.kind == "teach" %}
+              <span class="badge bg-coral">Teaches</span>
+            {% else %}
+              <span class="badge badge-soft">Wants to learn</span>
+            {% endif %}
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+            <span class="skill-tag {% if entry.kind == 'learn' %}learn{% endif %}">{{ entry.skill.name }}</span>
+            <span class="badge badge-soft">{{ entry.skill.category }}</span>
+          </div>
+
+          <div class="small text-secondary mb-3">
+            {{ entry.get_level_display }}
+            {% if entry.kind == "teach" %} · {{ entry.price }} credits/hr{% endif %}
+            · <span class="stars"><i class="bi bi-star-fill"></i></span> {{ entry.user.average_rating }}
+            <span class="text-secondary">({{ entry.user.review_count }})</span>
+          </div>
+
+          <div class="mt-auto">
+            {% if entry.kind == "teach" %}
+              <a href="{% url 'user_profile' entry.user.pk %}?skill={{ entry.skill_id }}&amp;direction=learn" class="btn btn-coral btn-sm w-100">
+                <i class="bi bi-mortarboard"></i> Request to learn
+              </a>
+            {% elif entry.skill_id in my_teach_ids %}
+              <a href="{% url 'user_profile' entry.user.pk %}?skill={{ entry.skill_id }}&amp;direction=teach" class="btn btn-dark btn-sm w-100">
+                <i class="bi bi-easel"></i> Offer to teach
+              </a>
+            {% else %}
+              <a href="{% url 'skills' %}" class="btn btn-light btn-sm w-100" title="Add this skill to your teaching list first">
+                <i class="bi bi-plus-lg"></i> Add to your teaching skills
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="card empty-state">
+          <i class="bi bi-search"></i>No skills match your search.
+          <div class="mt-3"><a href="{% url 'discover' %}" class="btn btn-coral btn-sm">Show all skills</a></div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
