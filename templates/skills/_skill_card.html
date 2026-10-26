@@ -1,0 +1,32 @@
+<div class="card h-100 p-3">
+  <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+    <div class="fw-bold">{{ skill.name }}</div>
+    <span class="badge badge-soft text-nowrap">{{ skill.category }}</span>
+  </div>
+
+  <div class="small text-secondary mb-2">
+    <i class="bi bi-mortarboard"></i> {{ skill.teacher_total|default:0 }} teaching
+    · <i class="bi bi-book"></i> {{ skill.learner_total|default:0 }} learning
+  </div>
+
+  {% if skill.id in teach_ids or skill.id in learn_ids or skill.id in learned_ids %}
+    <div class="d-flex gap-1 mb-2 flex-wrap">
+      {% if skill.id in teach_ids %}<span class="badge badge-soft"><i class="bi bi-check2"></i> You teach this</span>{% endif %}
+      {% if skill.id in learn_ids %}<span class="badge badge-soft"><i class="bi bi-check2"></i> You learn this</span>{% endif %}
+      {% if skill.id in learned_ids %}<span class="badge badge-soft"><i class="bi bi-patch-check"></i> Learned</span>{% endif %}
+    </div>
+  {% endif %}
+
+  <form method="post" class="mt-auto">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+    <input type="hidden" name="skill" value="{{ skill.pk }}">
+    <select name="level" class="form-select form-select-sm mb-2" aria-label="Level for {{ skill.name }}">
+      {% for value, label in levels %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+    </select>
+    <div class="d-flex gap-1">
+      <button type="submit" name="kind" value="teach" class="btn btn-sm btn-dark flex-fill"><i class="bi bi-mortarboard"></i> Teach</button>
+      <button type="submit" name="kind" value="learn" class="btn btn-sm btn-coral flex-fill"><i class="bi bi-book"></i> Learn</button>
+    </div>
+  </form>
+</div>

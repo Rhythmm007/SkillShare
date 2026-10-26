@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}My skills{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+  <div>
+    <h1 class="h3 mb-1">My skills</h1>
+    <p class="text-secondary mb-0">Teach what you know and pick up what you want to learn.</p>
+  </div>
+  <a href="{% url 'my_profile' %}" class="btn btn-light"><i class="bi bi-person"></i> My profile</a>
+</div>
+
+<!-- ===================== MY SKILLS ===================== -->
+<div class="row g-4 mb-5">
+  <div class="col-lg-6">
+    <div class="card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0"><i class="bi bi-mortarboard text-indigo"></i> I can teach</h2>
+        <span class="badge badge-soft">{{ teach_skills|length }}</span>
+      </div>
+
+      {% for s in teach_skills %}
+        <div class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
+          <div>
+            <div class="fw-semibold">{{ s.skill.name }}</div>
+            <div class="small text-secondary">{{ s.price }} credits/hr · {{ s.get_level_display }}</div>
+          </div>
+          <div class="d-flex align-items-center gap-1">
+            <form method="post" class="d-flex align-items-center gap-1">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="update">
+              <input type="hidden" name="user_skill" value="{{ s.pk }}">
+              <select name="level" class="form-select form-select-sm" style="width:auto;" aria-label="Level for {{ s.skill.name }}">
+                {% for value, label in levels %}<option value="{{ value }}" {% if s.level == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-light" title="Save level"><i class="bi bi-check2"></i></button>
+            </form>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="remove">
+              <input type="hidden" name="user_skill" value="{{ s.pk }}">
+              <button type="submit" class="btn btn-sm btn-light text-danger" title="Remove"><i class="bi bi-x-lg"></i></button>
+            </form>
+          </div>
+        </div>
+      {% empty %}
+        <div class="empty-state py-4"><i class="bi bi-easel"></i>No teaching skills yet. Pick one below.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0"><i class="bi bi-book text-coral"></i> I want to learn</h2>
+        <span class="badge badge-soft">{{ learn_skills|length }}</span>
+      </div>
+
+      {% for s in learn_skills %}
+        <div class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
+          <div>
+            <div class="fw-semibold">{{ s.skill.name }}</div>
+            <div class="small text-secondary">Current level: {{ s.get_level_display }}</div>
+          </div>
+          <div class="d-flex align-items-center gap-1">
+            <form method="post" class="d-flex align-items-center gap-1">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="update">
+              <input type="hidden" name="user_skill" value="{{ s.pk }}">
+              <select name="level" class="form-select form-select-sm" style="width:auto;" aria-label="Level for {{ s.skill.name }}">
+                {% for value, label in levels %}<option value="{{ value }}" {% if s.level == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-light" title="Save level"><i class="bi bi-check2"></i></button>
+            </form>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="remove">
+              <input type="hidden" name="user_skill" value="{{ s.pk }}">
+              <button type="submit" class="btn btn-sm btn-light text-danger" title="Remove"><i class="bi bi-x-lg"></i></button>
+            </form>
+          </div>
+        </div>
+      {% empty %}
+        <div class="empty-state py-4"><i class="bi bi-book"></i>Nothing on your learning list yet. Pick one below.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LEARNED ===================== -->
+<div class="card p-4 mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 mb-0"><i class="bi bi-patch-check text-green"></i> I have learned</h2>
+    <span class="badge badge-soft">{{ learned_skills|length }}</span>
+  </div>
+  <p class="small text-secondary mb-3">Skills move here automatically when you complete a session.</p>
+
+  {% for s in learned_skills %}
+    <div class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
+      <div>
+        <span class="skill-tag learned">{{ s.skill.name }}</span>
+        <span class="small text-secondary">{{ s.get_level_display }}</span>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="remove">
+        <input type="hidden" name="user_skill" value="{{ s.pk }}">
+        <button type="submit" class="btn btn-sm btn-light text-danger" title="Remove from learned"><i class="bi bi-x-lg"></i></button>
+      </form>
+    </div>
+  {% empty %}
+    <p class="small text-secondary mb-0">Nothing here yet. Complete a session to mark a skill as learned.</p>
+  {% endfor %}
+</div>
+
+<!-- ===================== POPULAR ===================== -->
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-2">
+  <h2 class="h5 mb-0"><i class="bi bi-fire text-coral"></i> Popular skills</h2>
+  <span class="small text-secondary">Most added by members</span>
+</div>
+<div class="row g-3 mb-5">
+  {% for skill in popular %}
+    <div class="col-md-6 col-xl-3">{% include "skills/_skill_card.html" %}</div>
+  {% empty %}
+    <div class="col-12">
+      <div class="card empty-state">
+        <i class="bi bi-tags"></i>No skills in the catalog yet.
+        <div class="small mt-2">Ask an admin to add skills.</div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- ===================== BROWSE ALL ===================== -->
+<div class="card p-4">
+  <h2 class="h5 mb-3">Browse all skills</h2>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-6">
+      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search skills or categories...">
+    </div>
+    <div class="col-md-4">
+      <select name="category" class="form-select">
+        <option value="">All categories</option>
+        {% for c in categories %}
+          <option value="{{ c }}" {% if c == selected_category %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-dark" type="submit"><i class="bi bi-search"></i> Search</button>
+    </div>
+  </form>
+
+  {% if query or selected_category %}
+    <p class="small text-secondary">
+      {{ skills|length }} skill{{ skills|length|pluralize }} found.
+      <a href="{% url 'skills' %}">Clear search</a>
+    </p>
+  {% endif %}
+
+  <div class="row g-3">
+    {% for skill in skills %}
+      <div class="col-md-6 col-xl-4">{% include "skills/_skill_card.html" %}</div>
+    {% empty %}
+      <div class="col-12">
+        <div class="empty-state"><i class="bi bi-search"></i>No skills match your search. Try another word or category.</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

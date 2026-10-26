@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Skill catalog{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-1">Skill catalog</h1>
+<p class="text-secondary">Users can only choose skills from this list.</p>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card p-4">
+      <h2 class="h5">Add a skill</h2>
+      <form method="post">
+        {% csrf_token %}
+        {% include "shared/_form_fields.html" with form=form %}
+        <button type="submit" class="btn btn-coral w-100"><i class="bi bi-plus-lg"></i> Add skill</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead><tr><th>Skill</th><th>Category</th><th>Teachers</th><th>Learners</th><th></th></tr></thead>
+          <tbody>
+            {% for skill in skills %}
+              <tr>
+                <td class="fw-semibold">{{ skill.name }}</td>
+                <td><span class="skill-tag">{{ skill.category }}</span></td>
+                <td>{{ skill.teacher_count }}</td>
+                <td>{{ skill.learner_count }}</td>
+                <td class="text-end">
+                  <form method="post" action="{% url 'admin_delete_skill' skill.pk %}" onsubmit="return confirm('Delete {{ skill.name }}? It will be removed from every profile.');">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-light"><i class="bi bi-trash"></i></button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="empty-state"><i class="bi bi-tags"></i>No skills yet. Add your first one.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
