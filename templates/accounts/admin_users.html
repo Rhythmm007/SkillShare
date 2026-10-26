@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+  <h1 class="h3 mb-0">Users</h1>
+  <form method="get" class="d-flex gap-2">
+    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search users...">
+    <button class="btn btn-dark"><i class="bi bi-search"></i></button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-clickable mb-0 align-middle">
+      <thead>
+        <tr><th>User</th><th>Role</th><th>Teaches</th><th>Learns</th><th>Credits</th><th>Rating</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <!-- Clicking a row opens the user's details -->
+          <tr onclick="window.location='{% url 'admin_user_detail' u.pk %}'">
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                {% include "shared/_avatar.html" with person=u size=36 %}
+                <div>
+                  <div class="fw-semibold">{{ u.display_name }}</div>
+                  <div class="small text-secondary">{{ u.email|default:u.username }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{% if u.is_admin %}<span class="badge bg-dark">Admin</span>{% else %}<span class="badge badge-soft">User</span>{% endif %}</td>
+            <td>{% for s in u.teach_skills %}<span class="skill-tag">{{ s.skill.name }}</span>{% empty %}<span class="text-secondary small">-</span>{% endfor %}</td>
+            <td>{% for s in u.learn_skills %}<span class="skill-tag learn">{{ s.skill.name }}</span>{% empty %}<span class="text-secondary small">-</span>{% endfor %}</td>
+            <td class="fw-semibold">{{ u.credits }}</td>
+            <td><span class="stars"><i class="bi bi-star-fill"></i></span> {{ u.average_rating }}</td>
+            <td>{% if u.is_active %}<span class="small text-green"><i class="bi bi-circle-fill" style="font-size:.5rem"></i> Active</span>{% else %}<span class="badge bg-danger-subtle text-danger-emphasis">Suspended</span>{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="empty-state">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Notifications</h1>
+
+<div class="card">
+  <ul class="list-group list-group-flush">
+    {% for n in notifications %}
+      <li class="list-group-item d-flex gap-3 align-items-start {% if not n.is_read %}bg-body-tertiary{% endif %}">
+        <i class="bi bi-bell{% if not n.is_read %}-fill text-coral{% else %} text-secondary{% endif %} mt-1"></i>
+        <div class="flex-grow-1">
+          {% if n.link %}<a href="{{ n.link }}" class="text-reset text-decoration-none">{{ n.text }}</a>{% else %}{{ n.text }}{% endif %}
+          <div class="small text-secondary">{{ n.created_at|timesince }} ago</div>
+        </div>
+        {% if not n.is_read %}<span class="badge bg-coral">New</span>{% endif %}
+      </li>
+    {% empty %}
+      <li class="list-group-item empty-state"><i class="bi bi-bell"></i>You're all caught up.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

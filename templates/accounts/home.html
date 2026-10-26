@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<section class="hero mb-4">
+  <div class="row align-items-center position-relative" style="z-index: 1;">
+    <div class="col-lg-7">
+      <span class="badge bg-coral mb-3">Teach. Learn. Swap.</span>
+      <h1 class="display-5 fw-bold mb-3">Trade what you know for what you want to learn.</h1>
+      <p class="lead mb-4">Teach guitar, learn Spanish. Swap skills one-to-one for free, or pay with credits you earn by teaching.</p>
+      <a href="{% url 'register' %}" class="btn btn-coral btn-lg me-2">Get 20 free credits</a>
+      <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">Log in</a>
+    </div>
+  </div>
+</section>
+
+<h2 class="h4 mb-3">How it works</h2>
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card h-100 p-4">
+      <span class="step-number mb-3">1</span>
+      <h3 class="h5">Add your skills</h3>
+      <p class="text-secondary mb-0">Pick what you can teach and what you want to learn from our skill catalog.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 p-4">
+      <span class="step-number mb-3">2</span>
+      <h3 class="h5">Find a match</h3>
+      <p class="text-secondary mb-0">If you each teach what the other wants, it's a free swap. If not, pay with credits.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 p-4">
+      <span class="step-number mb-3">3</span>
+      <h3 class="h5">Learn safely</h3>
+      <p class="text-secondary mb-0">Credits stay locked until the session is done. If something goes wrong, you get them back.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card p-4">
+  <h2 class="h5 mb-3">Credit prices per hour</h2>
+  <div class="row text-center g-3">
+    <div class="col-4"><div class="stat-label">Beginner</div><div class="stat-value">6</div></div>
+    <div class="col-4"><div class="stat-label">Intermediate</div><div class="stat-value">8</div></div>
+    <div class="col-4"><div class="stat-label">Advanced</div><div class="stat-value">12</div></div>
+  </div>
+</div>
+{% endblock %}

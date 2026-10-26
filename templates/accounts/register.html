@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Create account{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6 col-xl-5">
+    <div class="card p-4">
+      <h1 class="h3 mb-1">Create your account</h1>
+      <p class="text-secondary">You'll start with 20 free credits.</p>
+      <form method="post">
+        {% csrf_token %}
+        {% include "shared/_form_fields.html" with form=form %}
+        <button type="submit" class="btn btn-coral w-100">Create account</button>
+      </form>
+      <p class="text-center small mt-3 mb-0">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}My profile{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">My profile</h1>
+  <a href="{% url 'skills' %}" class="btn btn-light"><i class="bi bi-lightbulb"></i> Manage skills</a>
+</div>
+
+<div class="row g-4">
+  <!-- Profile form -->
+  <div class="col-lg-7">
+    <div class="card p-4">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="profile">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="photo-edit-wrap">
+            {% if user.photo %}
+              <img id="profile-photo" src="{{ user.photo.url }}" alt="{{ user }}" class="avatar" style="width:72px;height:72px;">
+            {% else %}
+              <span id="profile-photo-fallback" class="avatar avatar-letter" style="width:72px;height:72px;font-size:calc(72px * 0.42);">{{ user.display_name|first|upper }}</span>
+              <img id="profile-photo" alt="Profile photo preview" class="avatar" style="width:72px;height:72px;display:none;">
+            {% endif %}
+
+            <!-- Clicking the photo opens the file picker. -->
+            <label for="id_photo" class="photo-edit-btn" title="Click to change your photo">
+              <i class="bi bi-camera"></i>
+            </label>
+
+            {% if user.photo %}
+              <button type="submit" name="remove_photo" value="1" class="photo-remove" formnovalidate
+                      title="Remove photo" aria-label="Remove profile photo"
+                      onclick="return confirm('Remove your profile photo?');"><i class="bi bi-x-lg"></i></button>
+            {% endif %}
+
+            <input type="file" name="photo" id="id_photo" accept="image/*" class="d-none" onchange="previewProfilePhoto(this)">
+          </div>
+
+          <div>
+            <div class="fw-bold">{{ user.display_name }}</div>
+            <div class="small text-secondary">@{{ user.username }} · {{ taught }} taught · {{ learned }} learned</div>
+            <div class="small"><span class="stars"><i class="bi bi-star-fill"></i></span> {{ user.average_rating }} ({{ user.review_count }} reviews)</div>
+            <div class="small text-secondary mt-1">
+              {% if user.photo %}Click your photo to replace it, or the &times; to remove it.{% else %}Click the photo spot to add a profile picture.{% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% include "shared/_form_fields.html" with form=profile_form %}
+        <button type="submit" class="btn btn-dark">Save profile</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Skills summary -->
+  <div class="col-lg-5">
+    <div class="card p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0"><i class="bi bi-mortarboard text-indigo"></i> I can teach</h2>
+        <span class="badge badge-soft">{{ user.teach_skills|length }}</span>
+      </div>
+      <div class="skill-pill-row">
+        {% for s in user.teach_skills %}
+          <span class="skill-pill teach">
+            <span class="skill-pill-name">{{ s.skill.name }}</span>
+            <span class="skill-pill-level">{{ s.get_level_display }}</span>
+          </span>
+        {% empty %}
+          <span class="small text-secondary">No skills yet.</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0"><i class="bi bi-book text-coral"></i> I want to learn</h2>
+        <span class="badge badge-soft">{{ user.learn_skills|length }}</span>
+      </div>
+      <div class="skill-pill-row">
+        {% for s in user.learn_skills %}
+          <span class="skill-pill learn">
+            <span class="skill-pill-name">{{ s.skill.name }}</span>
+            <span class="skill-pill-level">{{ s.get_level_display }}</span>
+          </span>
+        {% empty %}
+          <span class="small text-secondary">No skills yet.</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0"><i class="bi bi-patch-check text-green"></i> I have learned</h2>
+        <span class="badge badge-soft">{{ user.learned_skills|length }}</span>
+      </div>
+      <div class="skill-pill-row">
+        {% for s in user.learned_skills %}
+          <span class="skill-pill learned">
+            <span class="skill-pill-name">{{ s.skill.name }}</span>
+            <span class="skill-pill-level">{{ s.get_level_display }}</span>
+          </span>
+        {% empty %}
+          <span class="small text-secondary">Complete a session to add skills here.</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="h5 mb-2">Add or edit skills</h2>
+      <p class="small text-secondary">Skills have their own page now: search the catalog, see what is popular, then add, change the level or remove a skill.</p>
+      <a href="{% url 'skills' %}" class="btn btn-coral"><i class="bi bi-plus-lg"></i> Open skills page</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Show the picked file straight away, before the form is saved.
+  function previewProfilePhoto(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+
+    var img = document.getElementById("profile-photo");
+    var fallback = document.getElementById("profile-photo-fallback");
+
+    if (img) {
+      img.src = URL.createObjectURL(file);
+      img.style.display = "";
+    }
+    if (fallback) { fallback.style.display = "none"; }
+  }
+</script>
+{% endblock %}

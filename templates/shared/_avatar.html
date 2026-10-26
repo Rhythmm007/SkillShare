@@ -1,0 +1,9 @@
+{% comment %}
+  Shows a user's photo, or the first letter of their name.
+  Use: {% include "shared/_avatar.html" with person=some_user size=48 %}
+{% endcomment %}
+{% if person.photo %}
+  <img src="{{ person.photo.url }}" alt="{{ person }}" class="avatar" style="width: {{ size|default:40 }}px; height: {{ size|default:40 }}px;">
+{% else %}
+  <span class="avatar avatar-letter" style="width: {{ size|default:40 }}px; height: {{ size|default:40 }}px; font-size: calc({{ size|default:40 }}px * 0.42);">{{ person.display_name|first|upper }}</span>
+{% endif %}
